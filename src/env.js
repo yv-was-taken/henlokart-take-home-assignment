@@ -17,6 +17,8 @@ export const env = createEnv({
    */
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
+    henloTokenAddress: "0x23A96680Ccde03Bd4Bdd9a3e9a0Cb56A5D27F7c9",
+    rpc: "https://base-rpc.publicnode.com",
   },
 
   /**
