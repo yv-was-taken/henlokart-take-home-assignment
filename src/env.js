@@ -17,8 +17,10 @@ export const env = createEnv({
    */
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
-    henloTokenAddress: "0x23A96680Ccde03Bd4Bdd9a3e9a0Cb56A5D27F7c9",
-    rpc: "https://base-rpc.publicnode.com",
+    henloTokenAddress: z
+      .string()
+      .default("0x23A96680Ccde03Bd4Bdd9a3e9a0Cb56A5D27F7c9"),
+    rpc: z.string().default("https://base-rpc.publicnode.com"),
   },
 
   /**
@@ -28,6 +30,8 @@ export const env = createEnv({
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+    henloTokenAddress: process.env.NEXT_PUBLIC_HENLO_TOKEN_ADDRESS,
+    rpc: process.env.NEXT_PUBLIC_RPC,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
