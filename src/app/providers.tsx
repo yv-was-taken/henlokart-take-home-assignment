@@ -7,41 +7,53 @@ import { http } from "viem";
 import { base } from "wagmi/chains";
 import { mainnet, polygon, optimism, arbitrum } from "wagmi/chains";
 
-// 1. Import modules.
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-
-// 2. Create a new Query Client with a default `gcTime`.
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      gcTime: 1_000 * 60 * 60 * 24, // 24 hours
-    },
-  },
-});
-
-// 3. Set up the persister.
-const persister = createSyncStoragePersister({
-  serialize,
-  storage: window.localStorage,
-  deserialize,
-});
-
-const wagmiConfig = createConfig({
-  chains: [base],
-  transports: {
-    [base.id]: http(),
-  },
-});
-
-const { connectors } = getDefaultWallets({
-  appName: "My Web3 App",
-  projectId: "YOUR_PROJECT_ID", // Get this from WalletConnect Cloud
-  chains: wagmiConfig.chains,
-});
+import { httpBatchLink } from "@trpc/client";
+import { trpc } from "../utils/trpc";
+import superjson from "superjson";
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const [trpcClient] = useState(() =>
+    trpc.createClient({
+      links: [
+        httpBatchLink({
+          url: "/api/trpc",
+          transformer: superjson,
+        }),
+      ],
+    }),
+  );
+
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            gcTime: 1_000 * 60 * 60 * 24, // 24 hours
+          },
+        },
+      }),
+  );
+
+  const [persister] = useState(() => {
+    if (typeof window === "undefined") return undefined;
+
+    return createSyncStoragePersister({
+      serialize,
+      storage: window.localStorage,
+      deserialize,
+    });
+  });
+
+  const wagmiConfig = createConfig({
+    chains: [base],
+    transports: {
+      [base.id]: http(),
+    },
+  });
+
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -49,15 +61,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <WagmiProvider config={wagmiConfig}>
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <PersistQueryClientProvider
         client={queryClient}
         persistOptions={{ persister }}
       >
-        <RainbowKitProvider chains={wagmiConfig.chains}>
-          {mounted && children}
-        </RainbowKitProvider>
+        <WagmiProvider config={wagmiConfig}>
+          <RainbowKitProvider chains={wagmiConfig.chains}>
+            {mounted && children}
+          </RainbowKitProvider>
+        </WagmiProvider>
       </PersistQueryClientProvider>
-    </WagmiProvider>
+    </trpc.Provider>
   );
 }
