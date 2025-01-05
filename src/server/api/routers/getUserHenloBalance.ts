@@ -11,7 +11,6 @@ export const getUserHenloBalanceRouter = createTRPCRouter({
       try {
         console.log("\nquerying balance for address: ", input.address);
 
-        //       console.log("henloContract", Object.keys(henloContract))
         const contract = henloContract(input.address);
         const balance = await contract.read.balanceOf([input.address]);
         return {

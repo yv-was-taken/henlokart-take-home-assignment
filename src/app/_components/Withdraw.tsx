@@ -32,7 +32,6 @@ export const Withdraw = () => {
   });
 
   const onSubmit: SubmitHandler<FormInputs> = (submitData) => {
-    console.log(submitData);
     setIsSubmit(true);
     setFormData(submitData);
   };

@@ -1303,9 +1303,6 @@ export const getWalletClient = (account) => {
     transport: http("https://base-rpc.publicnode.com"),
   });
 
-  console.log("\n\n\n\n\n\n\n\n\n account argument: ", account);
-  console.log("walletClient account", walletClient.account);
-
   return walletClient;
 };
 
@@ -1316,7 +1313,7 @@ export const henloContract = (account) => {
   });
 
   const walletClient = getWalletClient(account);
-  console.log("walletClient account again", walletClient.account);
+  console.log("walletClient account", walletClient.account);
 
   return getContract({
     address: HENLO_CONTRACT_ADDRESS,

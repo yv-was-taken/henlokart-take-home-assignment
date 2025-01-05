@@ -95,7 +95,6 @@ export const withdrawRouter = createTRPCRouter({
         //});
 
         const contract = henloContract(input.fromAddress);
-        console.log("contract", contract.write);
         await contract.write.transfer([input.toAddress, input.amount]);
 
         console.log("response success");
