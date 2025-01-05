@@ -67,27 +67,35 @@ export const withdrawRouter = createTRPCRouter({
           "with amount: ",
           input.amount,
         );
-        //        console.log("henloContract", Object.keys(henloContract))
-        //        console.log("henloContract write", Object.keys(henloContract.write))
-        //       console.log('\n\n user account account', input.fromAddress);
-        //
 
-        //        const transaction = {
-        //          account: input.fromAddress,
-        //          to: HENLO_CONTRACT_ADDRESS,
-        //          data: encodeFunctionData({
-        //            abi: HENLO_ABI,
-        //            functionName: "transfer",
-        //            args: [input.toAddress, input.amount],
-        //          }),
-        //        };
+        //@dev
+        //both examples,
+        //getContract.write()... and walletClient.writeContract()...
+        //do not work, "account not found"
+        //.. as you can see from the logs in henlo.ts, the walletClient account is defined
+        //some weird viem bug, I'm not sure...
 
-        //        const walletClient = getWalletClient(input.fromAddress);
-        //
-        //        console.log('transaction account', transaction.account);
-        //        console.log('walletClient account', walletClient.account);
+        //const transaction = {
+        //  account: input.fromAddress,
+        //  to: HENLO_CONTRACT_ADDRESS,
+        //  data: encodeFunctionData({
+        //    abi: HENLO_ABI,
+        //    functionName: "transfer",
+        //    args: [input.toAddress, input.amount],
+        //  }),
+        //};
+
+        //const walletClient = getWalletClient(input.fromAddress);
+        //await walletClient.writeContract({
+        //  address: HENLO_CONTRACT_ADDRESS,
+        //  abi: HENLO_ABI,
+        //  functionName: "transfer",
+        //  args: [input.toAddress, input.amount],
+        //  account: input.fromAddress,
+        //});
 
         const contract = henloContract(input.fromAddress);
+        console.log("contract", contract.write);
         await contract.write.transfer([input.toAddress, input.amount]);
 
         console.log("response success");
