@@ -41,7 +41,7 @@ export const withdrawRouter = createTRPCRouter({
         if (input.amount <= 0) {
           return {
             success: false,
-            error: `amount is invalid or zero: ${input.fromAddress}`,
+            error: `amount is invalid or zero.`,
           };
         }
 

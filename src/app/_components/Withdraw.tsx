@@ -96,7 +96,6 @@ export const Withdraw = () => {
         !!address &&
         isSubmit &&
         !!formData.toAddress &&
-        formData.amount > 0 &&
         isValidating,
     },
   );
