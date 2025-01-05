@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { henloContract } from "~/server/api/contracts/henlo";
+import { henloContract } from "~/server/contracts/henlo";
 import { formatUnits } from "viem";
 
 export const getUserHenloBalanceRouter = createTRPCRouter({

@@ -45,6 +45,8 @@ export const Withdraw = () => {
   const [signature, setSignature] = useState<`0x${string}` | null>(null);
   const [walletClient, setWalletClient] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [preparedRequest, setPreparedRequest] = useState<any>(null);
+  const [isValidating, setIsValidating] = useState(false);
   const [formData, setFormData] = useState<FormInputs>({
     toAddress: "",
     amount: 0,
@@ -76,6 +78,7 @@ export const Withdraw = () => {
     try {
       setFormData(submitData);
       setError(null);
+      setIsValidating(true);
 
       const request = await walletClient.prepareTransactionRequest({
         account: address as `0x${string}`,
@@ -90,19 +93,16 @@ export const Withdraw = () => {
         }),
       });
 
-      const hash = await walletClient.sendTransaction(request);
-      setSignature(hash);
+      setPreparedRequest(request);
       setIsSubmit(true);
     } catch (error) {
-      const walletClientAddress = walletClient.account.address;
-      console.log("MEOW MEOW MEOW");
-      console.log(walletClientAddress === address);
       console.error("Transaction preparation failed:", error);
       setError(
         error instanceof Error
           ? error.message
           : "Transaction preparation failed",
       );
+      setIsValidating(false);
     }
   };
 
@@ -111,7 +111,6 @@ export const Withdraw = () => {
       fromAddress: address ?? "",
       toAddress: formData.toAddress,
       amount: formData.amount,
-      signature: signature,
     },
     {
       enabled:
@@ -120,9 +119,44 @@ export const Withdraw = () => {
         isSubmit &&
         !!formData.toAddress &&
         formData.amount > 0 &&
-        !!signature,
+        isValidating,
     },
   );
+
+  // Handle transaction sending after validation
+  useEffect(() => {
+    const sendTransaction = async () => {
+      if (withdrawResponse?.success && preparedRequest && isValidating) {
+        try {
+          const hash = await walletClient.sendTransaction(preparedRequest);
+          setSignature(hash);
+          setIsValidating(false);
+          setPreparedRequest(null);
+        } catch (error) {
+          console.error("Transaction sending failed:", error);
+          setError(
+            error instanceof Error
+              ? error.message
+              : "Transaction sending failed",
+          );
+          setIsValidating(false);
+        }
+      } else if (withdrawResponse?.error) {
+        // Handle API error response
+        const errorMessage =
+          withdrawResponse.error instanceof Error
+            ? withdrawResponse.error.message
+            : typeof withdrawResponse.error === "object" &&
+                withdrawResponse.error !== null
+              ? JSON.stringify(withdrawResponse.error)
+              : String(withdrawResponse.error);
+        setError(errorMessage);
+        setIsValidating(false);
+      }
+    };
+
+    sendTransaction();
+  }, [withdrawResponse, preparedRequest, walletClient, isValidating]);
 
   return (
     <Dialog>
@@ -165,15 +199,27 @@ export const Withdraw = () => {
               />
             </div>
             <DialogFooter>
-              <Button type="submit" disabled={!isConnected || !walletClient}>
-                {!isConnected ? "Connect Wallet" : "Submit"}
+              <Button
+                type="submit"
+                disabled={!isConnected || !walletClient || isValidating}
+              >
+                {!isConnected
+                  ? "Connect Wallet"
+                  : isValidating
+                    ? "Processing..."
+                    : "Submit"}
               </Button>
             </DialogFooter>
           </form>
         </div>
         {withdrawResponse?.error && (
           <div className="rounded-md border border-red-300 bg-red-100 p-2 font-medium text-red-500">
-            {withdrawResponse.error.toString()}
+            {withdrawResponse.error instanceof Error
+              ? withdrawResponse.error.message
+              : typeof withdrawResponse.error === "object" &&
+                  withdrawResponse.error !== null
+                ? JSON.stringify(withdrawResponse.error)
+                : String(withdrawResponse.error)}
           </div>
         )}
       </DialogContent>

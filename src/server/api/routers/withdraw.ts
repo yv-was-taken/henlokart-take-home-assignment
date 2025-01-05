@@ -1,14 +1,7 @@
 import { z } from "zod";
 
-import { encodeFunctionData } from "viem";
+import { isAddress } from "viem";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import {
-  publicClient,
-  HENLO_ABI,
-  HENLO_CONTRACT_ADDRESS,
-  getWalletClient,
-} from "~/server/api/contracts/henlo";
-import { formatUnits } from "viem";
 
 export const withdrawRouter = createTRPCRouter({
   executeWithdraw: publicProcedure
@@ -17,7 +10,6 @@ export const withdrawRouter = createTRPCRouter({
         toAddress: z.string(),
         fromAddress: z.string(),
         amount: z.number(),
-        signature: z.string(),
       }),
     )
     .query(async ({ input }) => {
@@ -31,23 +23,17 @@ export const withdrawRouter = createTRPCRouter({
           };
         }
 
-        if (
-          input.fromAddress === ""
-          // || !/^0x[a-fA-F0-9]{40}$/.test(input.fromAddress)
-        ) {
+        if (input.fromAddress === "" || !isAddress(input.fromAddress)) {
           return {
             success: false,
-            error: `fromAddress: ${input.fromAddress} is invalid`,
+            error: `fromAddress: ${input.fromAddress} is not a valid Ethereum address`,
           };
         }
 
-        if (
-          input.toAddress === ""
-          //|| !/^0x[a-fA-F0-9]{40}$/.test(input.toAddress)
-        ) {
+        if (input.toAddress === "" || !isAddress(input.toAddress)) {
           return {
             success: false,
-            error: `toAddress: ${input.toAddress} is invalid`,
+            error: `toAddress: ${input.toAddress} is not a valid Ethereum address`,
           };
         }
 
@@ -59,37 +45,6 @@ export const withdrawRouter = createTRPCRouter({
         }
 
         console.log("inputs validated!");
-
-        //console.log(
-        //  "\n performing withdraw... \n from address: ",
-        //  input.fromAddress,
-        //  "to address: ",
-        //  input.toAddress,
-        //  "with amount: ",
-        //  input.amount,
-        //);
-
-        //@dev
-        //both examples here (commented and uncommented),
-        //getContract.write()... and walletClient.writeContract()...
-        //throw because 'unknown account '
-        ////.. as you can see from the logs in henlo.ts, the walletClient account is populated
-        // but it's lost come the `transfer` call.
-
-        //throws because 'unknown account ' even though account is populated
-        //const walletClient = getWalletClient(input.fromAddress);
-        //await walletClient.writeContract({
-        //  address: HENLO_CONTRACT_ADDRESS,
-        //  abi: HENLO_ABI,
-        //  functionName: "transfer",
-        //  args: [input.toAddress, input.amount],
-        //  account: input.fromAddress,
-        //});
-
-        //throws because 'unknown account ' even though account is populated
-        //const contract = (input.fromAddress);
-        //await contract.write.transfer([input.toAddress, input.amount]);
-        //await publicClient.sendRawTransaction(input.signature);
 
         console.log("response success");
         console.log("input data: \n", input);
