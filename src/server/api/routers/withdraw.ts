@@ -23,14 +23,15 @@ export const withdrawRouter = createTRPCRouter({
           };
         }
 
-        if (input.fromAddress === "" || !isAddress(input.fromAddress)) {
+        // Strict address validation
+        if (!isAddress(input.fromAddress)) {
           return {
             success: false,
             error: `fromAddress: ${input.fromAddress} is not a valid Ethereum address`,
           };
         }
 
-        if (input.toAddress === "" || !isAddress(input.toAddress)) {
+        if (!isAddress(input.toAddress)) {
           return {
             success: false,
             error: `toAddress: ${input.toAddress} is not a valid Ethereum address`,

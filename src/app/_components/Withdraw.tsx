@@ -44,7 +44,7 @@ export const Withdraw = () => {
   const [isSubmit, setIsSubmit] = useState(false);
   const [signature, setSignature] = useState<`0x${string}` | null>(null);
   const [walletClient, setWalletClient] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
+  
   const [preparedRequest, setPreparedRequest] = useState<any>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [formData, setFormData] = useState<FormInputs>({
@@ -61,47 +61,25 @@ export const Withdraw = () => {
           transport: custom(window.ethereum),
         });
         setWalletClient(client);
-        setError(null);
+        
       } catch (err) {
-        setError("Failed to initialize wallet client");
+        
         console.error("Wallet client initialization error:", err);
       }
     }
   }, [address, isConnected]);
 
   const onSubmit: SubmitHandler<FormInputs> = async (submitData) => {
-    if (!walletClient || !address) {
-      setError("Wallet not connected");
-      return;
-    }
+    if (!walletClient || !address) return;
 
     try {
       setFormData(submitData);
-      setError(null);
+      
       setIsValidating(true);
 
-      const request = await walletClient.prepareTransactionRequest({
-        account: address as `0x${string}`,
-        to: HENLO_CONTRACT_ADDRESS,
-        data: encodeFunctionData({
-          abi: HENLO_ABI,
-          functionName: "transfer",
-          args: [
-            submitData.toAddress as `0x${string}`,
-            submitData.amount.toString(),
-          ],
-        }),
-      });
-
-      setPreparedRequest(request);
       setIsSubmit(true);
     } catch (error) {
-      console.error("Transaction preparation failed:", error);
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Transaction preparation failed",
-      );
+      console.error("Form submission failed:", error);
       setIsValidating(false);
     }
   };
@@ -126,37 +104,37 @@ export const Withdraw = () => {
   // Handle transaction sending after validation
   useEffect(() => {
     const sendTransaction = async () => {
-      if (withdrawResponse?.success && preparedRequest && isValidating) {
+      if (withdrawResponse?.success && isValidating && walletClient && address && formData) {
         try {
-          const hash = await walletClient.sendTransaction(preparedRequest);
+          const request = await walletClient.prepareTransactionRequest({
+            account: address as `0x${string}`,
+            to: HENLO_CONTRACT_ADDRESS,
+            data: encodeFunctionData({
+              abi: HENLO_ABI,
+              functionName: "transfer",
+              args: [
+                formData.toAddress as `0x${string}`,
+                formData.amount.toString(),
+              ],
+            }),
+          });
+
+          const hash = await walletClient.sendTransaction(request);
           setSignature(hash);
           setIsValidating(false);
-          setPreparedRequest(null);
+          
         } catch (error) {
-          console.error("Transaction sending failed:", error);
-          setError(
-            error instanceof Error
-              ? error.message
-              : "Transaction sending failed",
-          );
+          console.error("Transaction failed:", error);
           setIsValidating(false);
         }
       } else if (withdrawResponse?.error) {
-        // Handle API error response
-        const errorMessage =
-          withdrawResponse.error instanceof Error
-            ? withdrawResponse.error.message
-            : typeof withdrawResponse.error === "object" &&
-                withdrawResponse.error !== null
-              ? JSON.stringify(withdrawResponse.error)
-              : String(withdrawResponse.error);
-        setError(errorMessage);
+        
         setIsValidating(false);
       }
     };
 
     sendTransaction();
-  }, [withdrawResponse, preparedRequest, walletClient, isValidating]);
+  }, [withdrawResponse, walletClient, isValidating, address, formData]);
 
   return (
     <Dialog>
@@ -169,9 +147,20 @@ export const Withdraw = () => {
           <DialogDescription>Withdraw HENLO to an address.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          {error && (
+          {!isConnected && (
             <div className="rounded-md border border-red-300 bg-red-100 p-2 font-medium text-red-500">
-              {error}
+              Wallet not connected
+            </div>
+          )}
+          {withdrawResponse?.error && (
+            <div className="rounded-md border border-red-300 bg-red-100 p-2 font-medium text-red-500">
+              <span>Error: </span>
+              {withdrawResponse.error instanceof Error
+                ? withdrawResponse.error.message
+                : typeof withdrawResponse.error === "object" &&
+                  withdrawResponse.error !== null
+                ? JSON.stringify(withdrawResponse.error)
+                : String(withdrawResponse.error)}
             </div>
           )}
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -212,16 +201,7 @@ export const Withdraw = () => {
             </DialogFooter>
           </form>
         </div>
-        {withdrawResponse?.error && (
-          <div className="rounded-md border border-red-300 bg-red-100 p-2 font-medium text-red-500">
-            {withdrawResponse.error instanceof Error
-              ? withdrawResponse.error.message
-              : typeof withdrawResponse.error === "object" &&
-                  withdrawResponse.error !== null
-                ? JSON.stringify(withdrawResponse.error)
-                : String(withdrawResponse.error)}
-          </div>
-        )}
+        
       </DialogContent>
     </Dialog>
   );
