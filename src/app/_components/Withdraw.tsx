@@ -29,12 +29,6 @@ type FormInputs = {
 
 type WalletClient = ReturnType<typeof createWalletClient>;
 
-declare global {
-  interface Window {
-    ethereum?: any;
-  }
-}
-
 export const Withdraw = () => {
   const { register, handleSubmit } = useForm<FormInputs>();
   const { address, isConnected } = useAccount();
@@ -110,7 +104,7 @@ setIsSubmit(true);
       }
     };
 
-    sendTransaction();
+    void sendTransaction();
   }, [withdrawResponse, walletClient, isValidating, address, formData]);
 
   return (
@@ -136,7 +130,12 @@ setIsSubmit(true);
                 ? withdrawResponse.error.message
                 : typeof withdrawResponse.error === "object" && withdrawResponse.error !== null
                 ? JSON.stringify(withdrawResponse.error)
-                : String(withdrawResponse.error)}
+                : JSON.stringify(withdrawResponse.error)}
+            </div>
+          )}
+          {signature && (
+            <div className="rounded-md border border-green-300 bg-green-100 p-2 font-medium text-green-500">
+              Transaction submitted! Tx hash: {signature}
             </div>
           )}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
