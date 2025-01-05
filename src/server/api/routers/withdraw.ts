@@ -3,7 +3,7 @@ import { z } from "zod";
 import { encodeFunctionData } from "viem";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import {
-  henloContract,
+  publicClient,
   HENLO_ABI,
   HENLO_CONTRACT_ADDRESS,
   getWalletClient,
@@ -17,6 +17,7 @@ export const withdrawRouter = createTRPCRouter({
         toAddress: z.string(),
         fromAddress: z.string(),
         amount: z.number(),
+        signature: z.string(),
       }),
     )
     .query(async ({ input }) => {
@@ -59,14 +60,14 @@ export const withdrawRouter = createTRPCRouter({
 
         console.log("inputs validated!");
 
-        console.log(
-          "\n performing withdraw... \n from address: ",
-          input.fromAddress,
-          "to address: ",
-          input.toAddress,
-          "with amount: ",
-          input.amount,
-        );
+        //console.log(
+        //  "\n performing withdraw... \n from address: ",
+        //  input.fromAddress,
+        //  "to address: ",
+        //  input.toAddress,
+        //  "with amount: ",
+        //  input.amount,
+        //);
 
         //@dev
         //both examples here (commented and uncommented),
@@ -86,8 +87,9 @@ export const withdrawRouter = createTRPCRouter({
         //});
 
         //throws because 'unknown account ' even though account is populated
-        const contract = henloContract(input.fromAddress);
-        await contract.write.transfer([input.toAddress, input.amount]);
+        //const contract = (input.fromAddress);
+        //await contract.write.transfer([input.toAddress, input.amount]);
+        //await publicClient.sendRawTransaction(input.signature);
 
         console.log("response success");
         console.log("input data: \n", input);

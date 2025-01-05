@@ -11,7 +11,7 @@ export const getUserHenloBalanceRouter = createTRPCRouter({
       try {
         console.log("\nquerying balance for address: ", input.address);
 
-        const contract = henloContract(input.address);
+        const contract = henloContract;
         const balance = await contract.read.balanceOf([input.address]);
         return {
           balance: formatUnits(balance, 18), // Assuming 18 decimals
