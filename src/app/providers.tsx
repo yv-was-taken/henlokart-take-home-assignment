@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getDefaultWallets, RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { createConfig, WagmiProvider, deserialize, serialize } from "wagmi";
 import { http } from "viem";
 import { base } from "wagmi/chains";
-import { mainnet, polygon, optimism, arbitrum } from "wagmi/chains";
 
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { QueryClient } from "@tanstack/react-query";

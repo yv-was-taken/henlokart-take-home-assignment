@@ -51,7 +51,7 @@ export const Withdraw = () => {
     if (!isConnected || !address || !window.ethereum) return;
 
     const client = createWalletClient({
-      account: address as `0x${string}`,
+      account: address,
       chain: base,
       transport: custom(window.ethereum),
     });
@@ -86,11 +86,11 @@ setIsSubmit(true);
           return;
         }
 
-          // Only proceed with transaction if we have all required data
+          
           if (isValidating && walletClient && address && formData) {
           try {
             const request = await walletClient.prepareTransactionRequest({
-              account: address as `0x${string}`,
+              account: address,
               to: HENLO_CONTRACT_ADDRESS,
               data: encodeFunctionData({
                 abi: HENLO_ABI,
