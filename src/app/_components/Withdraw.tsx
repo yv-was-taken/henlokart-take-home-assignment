@@ -54,9 +54,9 @@ export const Withdraw = () => {
 
   const onSubmit: SubmitHandler<FormInputs> = (submitData) => {
     if (!walletClient || !address) return;
-setFormData(submitData);
-setIsValidating(true);
-setIsSubmit(true);
+    setFormData(submitData);
+    setIsValidating(true);
+    setIsSubmit(true);
   };
 
   const { data: withdrawResponse } = api.withdraw.executeWithdraw.useQuery(
@@ -66,11 +66,15 @@ setIsSubmit(true);
       amount: formData.amount,
     },
     {
-      enabled: isConnected && !!address && isSubmit && !!formData.toAddress && isValidating,
+      enabled:
+        isConnected &&
+        !!address &&
+        isSubmit &&
+        !!formData.toAddress &&
+        isValidating,
     },
   );
 
-  
   useEffect(() => {
     const sendTransaction = async () => {
       // If we got a response from the server (success or error), stop validating
@@ -80,8 +84,7 @@ setIsSubmit(true);
           return;
         }
 
-          
-          if (isValidating && walletClient && address && formData) {
+        if (isValidating && walletClient && address && formData) {
           try {
             const request = await walletClient.prepareTransactionRequest({
               account: address,
@@ -89,18 +92,21 @@ setIsSubmit(true);
               data: encodeFunctionData({
                 abi: HENLO_ABI,
                 functionName: "transfer",
-                args: [formData.toAddress as `0x${string}`, formData.amount.toString()],
+                args: [
+                  formData.toAddress as `0x${string}`,
+                  formData.amount.toString(),
+                ],
               }),
             });
-          
+
             const hash = await walletClient.sendTransaction(request);
             setSignature(hash);
           } catch (error) {
             console.error("Transaction failed:", error);
           } finally {
-        setIsValidating(false);
-                  }
-                }
+            setIsValidating(false);
+          }
+        }
       }
     };
 
@@ -128,9 +134,10 @@ setIsSubmit(true);
               <span>Error: </span>
               {withdrawResponse.error instanceof Error
                 ? withdrawResponse.error.message
-                : typeof withdrawResponse.error === "object" && withdrawResponse.error !== null
-                ? JSON.stringify(withdrawResponse.error)
-                : JSON.stringify(withdrawResponse.error)}
+                : typeof withdrawResponse.error === "object" &&
+                    withdrawResponse.error !== null
+                  ? JSON.stringify(withdrawResponse.error)
+                  : JSON.stringify(withdrawResponse.error)}
             </div>
           )}
           {signature && (
@@ -176,7 +183,6 @@ setIsSubmit(true);
             </DialogFooter>
           </form>
         </div>
-        
       </DialogContent>
     </Dialog>
   );

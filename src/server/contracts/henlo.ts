@@ -1,8 +1,4 @@
-import {
-  createPublicClient,
-  http,
-  getContract,
-} from "viem";
+import { createPublicClient, http, getContract } from "viem";
 import { base } from "viem/chains";
 import { HENLO_ABI, HENLO_CONTRACT_ADDRESS } from "~/server/constants";
 
