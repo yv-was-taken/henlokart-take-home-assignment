@@ -1302,22 +1302,31 @@ export const getWalletClient = (account) => {
     chain: base,
     transport: http("https://base-rpc.publicnode.com"),
   });
-  console.log("walletClient", walletClient);
+
+  console.log("\n\n\n\n\n\n\n\n\n account argument: ", account);
+  console.log("walletClient account", walletClient.account);
+
   return walletClient;
 };
 
-const publicClient = createPublicClient({
-  chain: base,
-  transport: http("https://base-rpc.publicnode.com"),
-});
+export const henloContract = (account) => {
+  const publicClient = createPublicClient({
+    chain: base,
+    transport: http("https://base-rpc.publicnode.com"),
+  });
 
-export const henloContract = getContract({
-  address: HENLO_CONTRACT_ADDRESS,
-  abi: HENLO_ABI,
-  client: {
-    public: publicClient,
-  },
-});
+  const walletClient = getWalletClient(account);
+  console.log("walletClient account again", walletClient.account);
+
+  return getContract({
+    address: HENLO_CONTRACT_ADDRESS,
+    abi: HENLO_ABI,
+    client: {
+      public: publicClient,
+      wallet: walletClient,
+    },
+  });
+};
 
 //export const writeContract = (account) => {
 //  return getContract({

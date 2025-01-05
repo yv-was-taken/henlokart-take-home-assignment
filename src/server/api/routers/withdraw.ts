@@ -72,17 +72,23 @@ export const withdrawRouter = createTRPCRouter({
         //       console.log('\n\n user account account', input.fromAddress);
         //
 
-        const transaction = {
-          to: HENLO_CONTRACT_ADDRESS,
-          data: encodeFunctionData({
-            abi: HENLO_ABI,
-            functionName: "transfer",
-            args: [input.toAddress, input.amount],
-          }),
-        };
+        //        const transaction = {
+        //          account: input.fromAddress,
+        //          to: HENLO_CONTRACT_ADDRESS,
+        //          data: encodeFunctionData({
+        //            abi: HENLO_ABI,
+        //            functionName: "transfer",
+        //            args: [input.toAddress, input.amount],
+        //          }),
+        //        };
 
-        const walletClient = getWalletClient(this.fromAddress);
-        await walletClient.sendTransaction(transaction);
+        //        const walletClient = getWalletClient(input.fromAddress);
+        //
+        //        console.log('transaction account', transaction.account);
+        //        console.log('walletClient account', walletClient.account);
+
+        const contract = henloContract(input.fromAddress);
+        await contract.write.transfer([input.toAddress, input.amount]);
 
         console.log("response success");
         console.log("input data: \n", input);
