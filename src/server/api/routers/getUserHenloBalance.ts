@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { henloContract } from "../contracts/henlo";
+import { henloContract } from "~/server/api/contracts/henlo";
 import { formatUnits } from "viem";
 
 export const getUserHenloBalanceRouter = createTRPCRouter({
@@ -10,6 +10,8 @@ export const getUserHenloBalanceRouter = createTRPCRouter({
     .query(async ({ input }) => {
       try {
         console.log("\nquerying balance for address: ", input.address);
+
+        //       console.log("henloContract", Object.keys(henloContract))
         const balance = await henloContract.read.balanceOf([input.address]);
         return {
           balance: formatUnits(balance, 18), // Assuming 18 decimals

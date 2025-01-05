@@ -1,4 +1,10 @@
-import { createPublicClient, http, getContract } from "viem";
+import {
+  createPublicClient,
+  createWalletClient,
+  custom,
+  http,
+  getContract,
+} from "viem";
 import { base } from "viem/chains";
 
 export const HENLO_ABI = [
@@ -1267,7 +1273,38 @@ export const HENLO_ABI = [
     type: "function",
   },
   { stateMutability: "payable", type: "receive" },
-] as const;
+] as const; // Your existing ABI
+
+//// Function to get the wallet client for write operations
+//const getWalletClient = () => {
+//  if (typeof window === "undefined") return null;
+//
+//  // Get the provider
+//  const provider = (window as any).ethereum;
+//  if (!provider) {
+//    throw new Error("No provider found");
+//  }
+//
+//  return createWalletClient({
+//    chain: base,
+//    transport: custom(provider)
+//  });
+//};
+
+// Create the wallet client for read and write operations
+
+export const HENLO_CONTRACT_ADDRESS =
+  "0x23A96680Ccde03Bd4Bdd9a3e9a0Cb56A5D27F7c9";
+
+export const getWalletClient = (account) => {
+  const walletClient = createWalletClient({
+    account: account,
+    chain: base,
+    transport: http("https://base-rpc.publicnode.com"),
+  });
+  console.log("walletClient", walletClient);
+  return walletClient;
+};
 
 const publicClient = createPublicClient({
   chain: base,
@@ -1275,7 +1312,21 @@ const publicClient = createPublicClient({
 });
 
 export const henloContract = getContract({
-  address: "0x23A96680Ccde03Bd4Bdd9a3e9a0Cb56A5D27F7c9",
+  address: HENLO_CONTRACT_ADDRESS,
   abi: HENLO_ABI,
-  client: publicClient,
+  client: {
+    public: publicClient,
+  },
 });
+
+//export const writeContract = (account) => {
+//  return getContract({
+//    address: HENLO_CONTRACT_ADDRESS,
+//    abi: HENLO_ABI,
+//    client: {
+//      public: publicClient,
+//      wallet: walletClient
+//    },
+//  })
+//
+//}

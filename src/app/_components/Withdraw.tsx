@@ -1,6 +1,7 @@
 "use client";
-
-import { useForm, submitHandler } from "react-hook-form";
+import { useAccount } from "wagmi";
+import type { SubmitHandler } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,6 +14,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useState } from "react";
+import { api } from "~/trpc/react";
 
 type FormInputs = {
   toAddress: string;
@@ -20,29 +23,35 @@ type FormInputs = {
 };
 
 export const Withdraw = () => {
-  const { register, handleSubmit, watch } = useForm<FormInputs>();
-  const onSubmit: SubmitHandler<Inputs> = (data) => console.log(data);
+  const { register, handleSubmit } = useForm<FormInputs>();
+  const { address, isConnected } = useAccount();
+  const [isSubmit, setIsSubmit] = useState(false);
+  const [formData, setFormData] = useState<FormInputs>({
+    toAddress: "",
+    amount: 0,
+  });
 
-  //@TODO remove
-  //console.log("amount change", watch("amount"))
-  //console.log("toAddress change", watch("toAddress"))
+  const onSubmit: SubmitHandler<FormInputs> = (submitData) => {
+    console.log(submitData);
+    setIsSubmit(true);
+    setFormData(submitData);
+  };
 
-  //@TODO remove come submission, may need parsing
-  //const handleToAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //  // Only allow valid hex characters and limit to ethereum address format
-  //  const value = e.target.value;
-  //  if (value === "" || /^0x[a-fA-F0-9]{0,40}$/.test(value)) {
-  //    (value);
-  //  }
-  //};
-
-  //const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //  // Only allow numbers and decimals
-  //  const value = e.target.value;
-  //  if (value === "" || /^\d*\.?\d*$/.test(value)) {
-  //    setAmount(value);
-  //  }
-  //};
+  const { data: withdrawResponse } = api.withdraw.executeWithdraw.useQuery(
+    {
+      fromAddress: address ?? "",
+      toAddress: formData.toAddress,
+      amount: formData.amount,
+    },
+    {
+      enabled:
+        isConnected &&
+        !!address &&
+        isSubmit &&
+        !!formData.toAddress &&
+        formData.amount > 0,
+    },
+  );
 
   return (
     <Dialog>
@@ -57,32 +66,38 @@ export const Withdraw = () => {
         <div className="grid gap-4 py-4">
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
+              <Label htmlFor="toAddress" className="text-right">
                 To:
               </Label>
               <Input
-                id="to"
+                id="toAddress"
                 defaultValue="0x..."
                 className="col-span-3"
                 {...register("toAddress")}
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="username" className="text-right">
+              <Label htmlFor="amount" className="text-right">
                 Amount
               </Label>
               <Input
                 id="amount"
+                type="number"
                 defaultValue="0"
                 className="col-span-3"
-                {...register("amount")}
+                {...register("amount", { valueAsNumber: true })}
               />
             </div>
             <DialogFooter>
-              <input type="submit" />
+              <Button type="submit">Submit</Button>
             </DialogFooter>
           </form>
         </div>
+        {withdrawResponse?.error && (
+          <div className="rounded-md border border-red-300 bg-red-100 p-2 font-medium text-red-500">
+            {withdrawResponse.error.toString()}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -1,5 +1,5 @@
-import { postRouter } from "~/server/api/routers/post";
 import { getUserHenloBalanceRouter } from "~/server/api/routers/getUserHenloBalance";
+import { withdrawRouter } from "~/server/api/routers/withdraw";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 /**
@@ -8,8 +8,8 @@ import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
-  post: postRouter,
   getUserHenloBalance: getUserHenloBalanceRouter,
+  withdraw: withdrawRouter,
 });
 
 // export type definition of API

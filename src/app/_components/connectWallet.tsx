@@ -14,7 +14,7 @@ export const ConnectWallet = () => {
     {
       address: address || "",
     },
-    { enabled: !!address },
+    { enabled: !!address && isConnected },
   );
 
   const formatAddress = (addr: string) => {
