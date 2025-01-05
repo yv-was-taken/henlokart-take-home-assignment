@@ -1,16 +1,11 @@
 "use client";
+
+import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
-import {
-  createWalletClient,
-  custom,
-  http,
-  getContract,
-  encodeFunctionData,
-  Account,
-} from "viem";
+import { createWalletClient, custom, encodeFunctionData } from "viem";
 import { base } from "viem/chains";
-import type { SubmitHandler } from "react-hook-form";
-import { useForm } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,16 +16,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { HENLO_CONTRACT_ADDRESS, HENLO_ABI } from "~/app/constants";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState, useEffect } from "react";
+import { HENLO_CONTRACT_ADDRESS, HENLO_ABI } from "~/app/constants";
 import { api } from "~/trpc/react";
 
 type FormInputs = {
   toAddress: string;
   amount: number;
 };
+
+type WalletClient = ReturnType<typeof createWalletClient>;
 
 declare global {
   interface Window {
@@ -43,9 +40,7 @@ export const Withdraw = () => {
   const { address, isConnected } = useAccount();
   const [isSubmit, setIsSubmit] = useState(false);
   const [signature, setSignature] = useState<`0x${string}` | null>(null);
-  const [walletClient, setWalletClient] = useState<any>(null);
-  
-  const [preparedRequest, setPreparedRequest] = useState<any>(null);
+  const [walletClient, setWalletClient] = useState<WalletClient | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [formData, setFormData] = useState<FormInputs>({
     toAddress: "",
@@ -53,35 +48,21 @@ export const Withdraw = () => {
   });
 
   useEffect(() => {
-    if (isConnected && address && window.ethereum) {
-      try {
-        const client = createWalletClient({
-          account: address as `0x${string}`,
-          chain: base,
-          transport: custom(window.ethereum),
-        });
-        setWalletClient(client);
-        
-      } catch (err) {
-        
-        console.error("Wallet client initialization error:", err);
-      }
-    }
+    if (!isConnected || !address || !window.ethereum) return;
+
+    const client = createWalletClient({
+      account: address as `0x${string}`,
+      chain: base,
+      transport: custom(window.ethereum),
+    });
+    setWalletClient(client);
   }, [address, isConnected]);
 
-  const onSubmit: SubmitHandler<FormInputs> = async (submitData) => {
+  const onSubmit: SubmitHandler<FormInputs> = (submitData) => {
     if (!walletClient || !address) return;
-
-    try {
-      setFormData(submitData);
-      
-      setIsValidating(true);
-
-      setIsSubmit(true);
-    } catch (error) {
-      console.error("Form submission failed:", error);
-      setIsValidating(false);
-    }
+setFormData(submitData);
+setIsValidating(true);
+setIsSubmit(true);
   };
 
   const { data: withdrawResponse } = api.withdraw.executeWithdraw.useQuery(
@@ -91,44 +72,41 @@ export const Withdraw = () => {
       amount: formData.amount,
     },
     {
-      enabled:
-        isConnected &&
-        !!address &&
-        isSubmit &&
-        !!formData.toAddress &&
-        isValidating,
+      enabled: isConnected && !!address && isSubmit && !!formData.toAddress && isValidating,
     },
   );
 
-  // Handle transaction sending after validation
+  
   useEffect(() => {
     const sendTransaction = async () => {
-      if (withdrawResponse?.success && isValidating && walletClient && address && formData) {
-        try {
-          const request = await walletClient.prepareTransactionRequest({
-            account: address as `0x${string}`,
-            to: HENLO_CONTRACT_ADDRESS,
-            data: encodeFunctionData({
-              abi: HENLO_ABI,
-              functionName: "transfer",
-              args: [
-                formData.toAddress as `0x${string}`,
-                formData.amount.toString(),
-              ],
-            }),
-          });
-
-          const hash = await walletClient.sendTransaction(request);
-          setSignature(hash);
+      // If we got a response from the server (success or error), stop validating
+      if (withdrawResponse) {
+        if (!withdrawResponse.success) {
           setIsValidating(false);
-          
-        } catch (error) {
-          console.error("Transaction failed:", error);
-          setIsValidating(false);
+          return;
         }
-      } else if (withdrawResponse?.error) {
-        
+
+          // Only proceed with transaction if we have all required data
+          if (isValidating && walletClient && address && formData) {
+          try {
+            const request = await walletClient.prepareTransactionRequest({
+              account: address as `0x${string}`,
+              to: HENLO_CONTRACT_ADDRESS,
+              data: encodeFunctionData({
+                abi: HENLO_ABI,
+                functionName: "transfer",
+                args: [formData.toAddress as `0x${string}`, formData.amount.toString()],
+              }),
+            });
+          
+            const hash = await walletClient.sendTransaction(request);
+            setSignature(hash);
+          } catch (error) {
+            console.error("Transaction failed:", error);
+          } finally {
         setIsValidating(false);
+                  }
+                }
       }
     };
 
@@ -156,13 +134,12 @@ export const Withdraw = () => {
               <span>Error: </span>
               {withdrawResponse.error instanceof Error
                 ? withdrawResponse.error.message
-                : typeof withdrawResponse.error === "object" &&
-                  withdrawResponse.error !== null
+                : typeof withdrawResponse.error === "object" && withdrawResponse.error !== null
                 ? JSON.stringify(withdrawResponse.error)
                 : String(withdrawResponse.error)}
             </div>
           )}
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="toAddress" className="text-right">
                 To:
