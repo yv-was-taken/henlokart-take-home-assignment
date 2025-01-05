@@ -4,7 +4,7 @@ import { useAccount, useBalance } from "wagmi";
 import { api } from "~/trpc/react";
 
 interface BalanceDisplayProps {
-  address: string;
+  address: `0x${string}`;
 }
 
 export const BalanceDisplay = ({ address }: BalanceDisplayProps) => {
