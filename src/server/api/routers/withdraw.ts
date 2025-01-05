@@ -69,22 +69,13 @@ export const withdrawRouter = createTRPCRouter({
         );
 
         //@dev
-        //both examples,
+        //both examples here (commented and uncommented),
         //getContract.write()... and walletClient.writeContract()...
-        //do not work, "account not found"
-        //.. as you can see from the logs in henlo.ts, the walletClient account is defined
-        //some weird viem bug, I'm not sure...
+        //throw because 'unknown account '
+        ////.. as you can see from the logs in henlo.ts, the walletClient account is populated
+        // but it's lost come the `transfer` call.
 
-        //const transaction = {
-        //  account: input.fromAddress,
-        //  to: HENLO_CONTRACT_ADDRESS,
-        //  data: encodeFunctionData({
-        //    abi: HENLO_ABI,
-        //    functionName: "transfer",
-        //    args: [input.toAddress, input.amount],
-        //  }),
-        //};
-
+        //throws because 'unknown account ' even though account is populated
         //const walletClient = getWalletClient(input.fromAddress);
         //await walletClient.writeContract({
         //  address: HENLO_CONTRACT_ADDRESS,
@@ -94,6 +85,7 @@ export const withdrawRouter = createTRPCRouter({
         //  account: input.fromAddress,
         //});
 
+        //throws because 'unknown account ' even though account is populated
         const contract = henloContract(input.fromAddress);
         await contract.write.transfer([input.toAddress, input.amount]);
 
